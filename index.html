@@ -48,14 +48,15 @@
         routeInstructionsContainer = document.getElementById('panel');
 
       // Obtain the default map types from the platform object
-      var maptypes = platform.createDefaultLayers();
+      var defaultLayers = platform.createDefaultLayers();
 
       // Instantiate (and display) a map object:
+      const ZOOM = 19;
       var map = new H.Map(
         document.getElementById('mapContainer'),
-        maptypes.vector.normal.map,
+        defaultLayers.vector.normal.map,
         {
-          zoom: 10,
+          zoom: ZOOM,
           center: { lng: geoData.long, lat: geoData.lat }
       });
 
@@ -79,6 +80,7 @@
         });
         
         map.addObject(pointMarker);
+        map.setZoom(ZOOM);
 
         var obj = map.getObjects ();
         console.log("obj" + obj[0] + "\nlength: " + obj.length);
@@ -92,15 +94,54 @@
       var mapEvents = new H.mapevents.MapEvents(map);
 
       // Add event listeners:
-      map.addEventListener('tap', function(evt) {
-          // Log 'tap' and 'mouse' events:
-          console.log(evt.type, evt.currentPointer.type);
-      });
+      // map.addEventListener('tap', function(evt) {
+      //     // Log 'tap' and 'mouse' events:
+      //     console.log(evt.type, evt.currentPointer.type);
+      // });
 
       // Instantiate the default behavior, providing the mapEvents object:
       var behavior = new H.mapevents.Behavior(mapEvents);
       
-      
+      /**
+       * Switches the map language to traditional Chinese
+       *
+       * @param  {H.Map} map      A HERE Map instance within the application
+       * @pama   {H.service.Platform} platform    A stub class to access HERE services
+       */
+      function switchMapLanguage(map, platform){
+        // Create default layers
+        let defaultLayers = platform.createDefaultLayers({
+          lg: 'zh'
+        });
+        // Set the normal map variant of the vector map type
+        map.setBaseLayer(defaultLayers.vector.normal.map);
+
+        // Display default UI components on the map and change default
+        // language to traditional Chinese.
+        // Besides supported language codes you can also specify your custom translation
+        // using H.ui.i18n.Localization.
+        var ui = H.ui.UI.createDefault(map, defaultLayers, 'zh-TW');
+
+        // Remove not needed settings control
+        //ui.removeControl('mapsettings');
+      }
+      switchMapLanguage(map, platform);
+
+      /**
+       * Alters the UI to use imperial measurements.
+       *
+       * @param  {H.Map} map      A HERE Map instance within the application
+       * @param  {Object.<string, H.service.MapType>} defaultLayers
+       *         an object holding the three default HERE Map types
+       */
+      function useImperialMeasurements(map, defaultLayers){
+        // Create the default UI components
+        var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+        // Set the UI unit system to imperial measurement
+        ui.setUnitSystem(H.ui.UnitSystem.IMPERIAL);
+      }
+      useImperialMeasurements(map, defaultLayers);
 
       // // Create the parameters for the routing request:
       // var routingParameters = {
