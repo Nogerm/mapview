@@ -7,10 +7,37 @@
     type="text/javascript" charset="utf-8"></script>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"
     type="text/javascript" charset="utf-8"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   </head>
   <body>
     <div style="width: 100%; height: 100%" id="mapContainer"></div>
+    
     <script>
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      var firebaseConfig = {
+        apiKey: "AIzaSyDqYPv1nS5Gs5BZfXTk3iXQbsXP3m2eAn8",
+        authDomain: "soteria-map.firebaseapp.com",
+        databaseURL: "https://soteria-map-default-rtdb.firebaseio.com",
+        projectId: "soteria-map",
+        storageBucket: "soteria-map.appspot.com",
+        messagingSenderId: "417792025757",
+        appId: "1:417792025757:web:17616765085ee5ed046074",
+        measurementId: "G-WXPJKBHHXM"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+
+      var db = firebase.database();
+
+      var geoData = {
+        "long": 0,
+        "lat": 0
+      };
+
       // Initialize the platform object:
       var platform = new H.service.Platform({
         'apikey': '4cao79OMyeGL4FzZ5tgukxkRKf9cYxWfQo-NPe2syGc'
@@ -29,7 +56,36 @@
         maptypes.vector.normal.map,
         {
           zoom: 10,
-          center: { lng: 121.530, lat: 25.005 }
+          center: { lng: geoData.long, lat: geoData.lat }
+      });
+
+      const MAX_POINTS = 10;
+      db.ref("/geo").on('value', function (snapshot) {
+        geoData = snapshot.val();
+        console.log("data" + JSON.stringify(geoData));
+
+        map.setCenter({lat:geoData.lat, lng:geoData.long});
+
+        /**
+         * Adds markers to the map highlighting.
+         *
+         * https://developer.here.com/api-explorer/maps-js/markers/markers-on-the-map
+         *
+         * @param  {H.Map} map A HERE Map instance within the application
+         */
+        var pointMarker = new H.map.Marker({
+          lat:geoData.lat,
+          lng:geoData.long
+        });
+        
+        map.addObject(pointMarker);
+
+        var obj = map.getObjects ();
+        console.log("obj" + obj[0] + "\nlength: " + obj.length);
+
+        if(obj.length > MAX_POINTS) {
+          map.removeObjects([obj[0]]);
+        }
       });
 
       // Enable the event system on the map instance:
@@ -44,95 +100,61 @@
       // Instantiate the default behavior, providing the mapEvents object:
       var behavior = new H.mapevents.Behavior(mapEvents);
       
-      /**
-       * Adds markers to the map highlighting.
-       *
-       * https://developer.here.com/api-explorer/maps-js/markers/markers-on-the-map
-       *
-       * @param  {H.Map} map A HERE Map instance within the application
-       */
-      var pointMarker = new H.map.Marker({
-        lat:25.00557,
-        lng:121.53087
-      });
-      map.addObject(pointMarker);
+      
 
-      // Create the parameters for the routing request:
-      var routingParameters = {
-        'routingMode': 'fast',
-        'transportMode': 'car',
-        // The start point of the route:
-        'origin': '25.01657,121.53187',
-        // The end point of the route:
-        'destination': '25.01157,121.52187',
-        // Include the route shape in the response
-        'return': 'polyline'
-      };
+      // // Create the parameters for the routing request:
+      // var routingParameters = {
+      //   'routingMode': 'fast',
+      //   'transportMode': 'car',
+      //   // The start point of the route:
+      //   'origin': '25.01657,121.53187',
+      //   // The end point of the route:
+      //   'destination': '25.01157,121.52187',
+      //   // Include the route shape in the response
+      //   'return': 'polyline'
+      // };
 
-      // Define a callback function to process the routing response:
-      var onResult = function(result) {
-        // ensure that at least one route was found
-        if (result.routes.length) {
-          result.routes[0].sections.forEach((section) => {
-              // Create a linestring to use as a point source for the route line
-              let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
+      // // Define a callback function to process the routing response:
+      // var onResult = function(result) {
+      //   // ensure that at least one route was found
+      //   if (result.routes.length) {
+      //     result.routes[0].sections.forEach((section) => {
+      //         // Create a linestring to use as a point source for the route line
+      //         let linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
 
-              // Create a polyline to display the route:
-              let routeLine = new H.map.Polyline(linestring, {
-                style: { strokeColor: 'blue', lineWidth: 3 }
-              });
+      //         // Create a polyline to display the route:
+      //         let routeLine = new H.map.Polyline(linestring, {
+      //           style: { strokeColor: 'blue', lineWidth: 3 }
+      //         });
 
-              // Create a marker for the start point:
-              let startMarker = new H.map.Marker(section.departure.place.location);
+      //         // Create a marker for the start point:
+      //         let startMarker = new H.map.Marker(section.departure.place.location);
 
-              // Create a marker for the end point:
-              let endMarker = new H.map.Marker(section.arrival.place.location);
+      //         // Create a marker for the end point:
+      //         let endMarker = new H.map.Marker(section.arrival.place.location);
 
-              // Add the route polyline and the two markers to the map:
-              map.addObjects([routeLine, startMarker, endMarker]);
+      //         // Add the route polyline and the two markers to the map:
+      //         map.addObjects([routeLine, startMarker, endMarker]);
 
-              // Set the map's viewport to make the whole route visible:
-              map.getViewModel().setLookAtData({bounds: routeLine.getBoundingBox()});
-          });
-        }
-      };
+      //         // Set the map's viewport to make the whole route visible:
+      //         map.getViewModel().setLookAtData({bounds: routeLine.getBoundingBox()});
+      //     });
+      //   }
+      // };
 
-      // Get an instance of the routing service version 8:
-      var router = platform.getRoutingService(null, 8);
+      // // Get an instance of the routing service version 8:
+      // var router = platform.getRoutingService(null, 8);
 
-      // Call calculateRoute() with the routing parameters,
-      // the callback and an error callback function (called if a
-      // communication error occurs):
-      router.calculateRoute(routingParameters, onResult,
-        function(error) {
-          alert(error.message);
-        });
+      // // Call calculateRoute() with the routing parameters,
+      // // the callback and an error callback function (called if a
+      // // communication error occurs):
+      // router.calculateRoute(routingParameters, onResult,
+      //   function(error) {
+      //     alert(error.message);
+      //   });
     
     </script>
 
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-
-    <!-- TODO: Add SDKs for Firebase products that you want to use
-        https://firebase.google.com/docs/web/setup#available-libraries -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
-
-    <script>
-      // Your web app's Firebase configuration
-      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      var firebaseConfig = {
-        apiKey: "AIzaSyDqYPv1nS5Gs5BZfXTk3iXQbsXP3m2eAn8",
-        authDomain: "soteria-map.firebaseapp.com",
-        databaseURL: "https://soteria-map-default-rtdb.firebaseio.com",
-        projectId: "soteria-map",
-        storageBucket: "soteria-map.appspot.com",
-        messagingSenderId: "417792025757",
-        appId: "1:417792025757:web:17616765085ee5ed046074",
-        measurementId: "G-WXPJKBHHXM"
-      };
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      firebase.analytics();
-    </script>
+    
   </body>
 </html>
