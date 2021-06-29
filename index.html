@@ -109,5 +109,30 @@
         });
     
     </script>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      var firebaseConfig = {
+        apiKey: "AIzaSyDqYPv1nS5Gs5BZfXTk3iXQbsXP3m2eAn8",
+        authDomain: "soteria-map.firebaseapp.com",
+        databaseURL: "https://soteria-map-default-rtdb.firebaseio.com",
+        projectId: "soteria-map",
+        storageBucket: "soteria-map.appspot.com",
+        messagingSenderId: "417792025757",
+        appId: "1:417792025757:web:17616765085ee5ed046074",
+        measurementId: "G-WXPJKBHHXM"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      firebase.analytics();
+    </script>
   </body>
 </html>
